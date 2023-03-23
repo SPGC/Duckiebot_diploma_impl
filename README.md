@@ -1,3 +1,12 @@
+## Jass setup
+
+1. Being in the directory with the project build project on robot `dts devel build -f -H <BOT_NAME>`
+2. Being in the directory with the project run project `dts devel run -M -f -H <BOT_NAME> -L jass`
+3. Open virtual joystick `dts duckiebot keyboard_control <BOT_NAME`
+4. Press `A`
+
+
+
 # Usage
 
 ```
@@ -62,9 +71,3 @@ When launching a new container, you can simply provide `dt-launcher-my-launcher`
 command.
 
 
-## Jass setup
-
-1. Being in the directory with the project build project on robot `dts devel build -f -H <BOT_NAME>`
-2. Being in the directory with the project run project `dts devel run -M -f -H <BOT_NAME> -L jass`
-3. Open virtual joystick `dts duckiebot keyboard_control <BOT_NAME`
-4. Press `A`
