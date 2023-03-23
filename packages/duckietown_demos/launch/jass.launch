@@ -32,5 +32,8 @@
 	    <arg name="/LED/emitter" value="true"/>
 
   	</include>
+	<include file="$(find apriltag)/launch/apriltag_detector_node.launch">
+            <arg name="veh" value="$(arg veh)"/>
+	</include>
 
 </launch>

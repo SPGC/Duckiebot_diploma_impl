@@ -208,8 +208,6 @@ class LaneControllerNode(DTROS):
         """
         if not self.stop:
             self.pub_car_cmd.publish(car_cmd_msg)
-        else:
-            self.log('skip!')
 
     def getControlAction(self, pose_msg):
         """Callback that receives a pose message and updates the related control command.

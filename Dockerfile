@@ -52,6 +52,7 @@ COPY ./dependencies-apt.txt "${REPO_PATH}/"
 RUN dt-apt-install ${REPO_PATH}/dependencies-apt.txt
 
 # install python3 dependencies
+RUN pip uninstall dt-apriltag
 COPY ./dependencies-py3.txt "${REPO_PATH}/"
 RUN dt-pip3-install ${REPO_PATH}/dependencies-py3.txt
 
