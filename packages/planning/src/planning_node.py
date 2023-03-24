@@ -133,14 +133,21 @@ class Planning(DTROS):
 
 
     def get_way(self, msg):
-        stop_msg = Bool()
-        stop_msg.data = True
-        self.stop_tag_detection_pub.publish(stop_msg)
-        data = msg.data
-        cross = list(set([self.markers_db[i] for i in data]))[0]
-        marker = self.state[cross]['prev'][self.prev_state]
-        rotation = self.map[self.trajectory[0]][marker][self.trajectory[1]]
-        self.log(f'trajectory == {rotation}')
+        self.log('in get_way planning method')
+        if self.state is None or self.map is None or self.prev_state is None:
+            self.log('in process to init values')
+        else:
+            stop_msg = Bool()
+            stop_msg.data = True
+            self.stop_tag_detection_pub.publish(stop_msg)
+            data = msg.data
+            self.log(f'markers in planning node {data}')
+            cross = list(set([self.markers_db[i] for i in data]))
+            self.log(f'current cross {cross}')
+            cross = cross[0]
+            marker = self.state[cross]['prev'][self.prev_state]
+            rotation = self.map[self.trajectory[0]][marker][self.trajectory[1]]
+            self.log(f'trajectory == {rotation}')
 
 
 
