@@ -5,7 +5,7 @@ import rospy
 import numpy as np
 from numpy.linalg import norm
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
-from std_msgs.msg import Float64, Int32MultiArray, Bool
+from std_msgs.msg import Float64, Int32MultiArray, Bool, Int32, String
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Vector3
 from numpy import ndarray
@@ -26,7 +26,7 @@ SIGN = {
 }
 
 
-def parse(map, db):
+def parse(map, db, checker = False):
     new_map = {}
     for cross_num in map.keys():
         new_map[cross_num] = {}
@@ -44,7 +44,16 @@ def parse(map, db):
     for cross_i in new_map.keys():
         for id in new_map[cross_i]:
             markers_db[id] = cross_i
-    return new_map, markers_db
+    state = {}
+    for cross_num in map.keys():
+        state[cross_num] = {'prev': {}}
+        for i, tag_id in enumerate(map[cross_num]['tag_id']):
+            if tag_id == '' or map[cross_num]['cross'][3 - i] == '':
+                continue
+            state[cross_num]['prev'][map[cross_num]['cross'][(3 + i) % 4]] = tag_id
+
+
+    return new_map, markers_db, state
 
 
 class Planning(DTROS):
@@ -57,19 +66,30 @@ class Planning(DTROS):
         - Создать путь
         - Обновлять цель (внутри маршрута)
         """
+
         self.markers_conf = rospy.get_param('~markers_db')
-        self.map_conf = rospy.get_param('~config')
-        self.log('planning_node_init')
+        self.zone1 = rospy.get_param('~zone1')
+        self.zone2 = rospy.get_param('~zone2')
+        self.zone3 = rospy.get_param('~zone3')
+        self.full = rospy.get_param('~full')
+
         with open(self.markers_conf) as stream:
-            self.markers_db = yaml.safe_load(stream)
-        with open(self.map_conf) as stream:
-            self.map = yaml.safe_load(stream)
-        self.state = self.map['state']
-        self.map, self.markers_db = parse(self.map['map'], self.markers_db)
-        self.log(self.map)
-        self.log(self.markers_db)
-        self.prev_state = 1
-        self.trajectory = [2, 3]
+            self.markers_db_yaml = yaml.safe_load(stream)
+        self.log('planning_node_init')
+        self.map_name = None
+        self.prev_state = None
+        self.trajectory = None
+        self.state = None
+        self.trajectory_sub = rospy.Subscriber(
+            '~trajectory', Int32MultiArray, self.update_trajectory, queue_size=1
+        )
+        self.begin_state_sub = rospy.Subscriber(
+            '~begin_state', Int32, self.update_begin_state, queue_size=1
+        )
+
+        self.map_sub = rospy.Subscriber(
+            '~map_state', String, self.update_map, queue_size=1
+        )
 
         self.stop_tag_detection_pub = rospy.Publisher(
             '~stop_detection', Bool, queue_size=1
@@ -78,6 +98,39 @@ class Planning(DTROS):
         self.tag_sub = rospy.Subscriber(
             "~tags_id", Int32MultiArray, self.get_way, queue_size=1, buff_size="20MB"
         )
+
+    def update_state(self):
+        map_conf = None
+        if self.map_name == 'zone1':
+            map_conf = self.zone1
+        elif self.map_name == 'zone2':
+            map_conf = self.zone2
+        elif self.map_name == 'zone3':
+            map_conf = self.zone3
+        elif self.map_name == 'full':
+            map_conf = self.full
+        with open(map_conf) as stream:
+            self.map = yaml.safe_load(stream)
+        self.state = self.map['state']
+        self.map, self.markers_db, self.state = parse(self.map, self.markers_db_yaml)
+        if self.map_name == 'zone1' or self.map_name == 'full':
+            self.state[1]['prev'][2] = 152
+            self.state[2]['prev'][1] = 143
+        self.log(self.map)
+        self.log(self.markers_db)
+
+    def update_trajectory(self, msg):
+        self.trajectory = msg.data
+        self.log(f'traj init == {self.trajectory}')
+
+    def update_begin_state(self, msg):
+        self.prev_state = msg.data
+        self.log(f'prev_state init == {self.prev_state}')
+
+    def update_map(self, msg):
+        self.map_name = msg.data
+        self.log(f'tmp_map init == {self.map_name}')
+
 
     def get_way(self, msg):
         stop_msg = Bool()
