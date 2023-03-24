@@ -56,7 +56,7 @@ class AprilTagDetector(DTROS):
         self.start_detect = False
 
     def change_stop_val(self, msg):
-        if self.swithcer:
+        if self.switcher:
             self.start_detect = True
             
 
