@@ -35,20 +35,23 @@ class AprilTagDetector(DTROS):
         )
 
         self.stop_sub = rospy.Subscriber(
-            '~stop', BoolStamped, self.change_stop_val, queue_size=1
+            '~start_detection', BoolStamped, self.change_stop_val, queue_size=1
         )
 
         self.start_sub = rospy.Subscriber(
-            '~start', Bool, self.change_start_val, queue_size=1
+            '~stop_detection', Bool, self.change_start_val, queue_size=1
         )
         self.log('apriltag_init')
-
+        self.swithcer = True
 
     def change_start_val(self, msg):
+        self.log("stop detection")
         self.start_detect = False
 
     def change_stop_val(self, msg):
-        self.start_detect = True
+        if self.swithcer:
+            self.start_detect = True
+            self.swithcer = False
 
     def _findAprilTags(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -60,7 +63,7 @@ class AprilTagDetector(DTROS):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             markers = self._findAprilTags(img)
             marker_id = [i.tag_id for i in markers]
-            self.log(marker_id)
+            #self.log(marker_id)
             marker_msg = Int32MultiArray(data=marker_id)
             self.marker_id_pub.publish(marker_msg)
 

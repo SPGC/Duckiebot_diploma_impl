@@ -2,7 +2,7 @@
     <arg name="veh" doc="Name of vehicle. ex: megaman"/>
     <arg name="pkg_name" value="planning"/>
     <arg name="node_name" default="planning_node"/>
-    <arg name="param_file_name" default="zone1_map" doc="Specify a param file. ex:megaman"/>
+    <arg name="param_file_name" default="autolab_test" doc="Specify a param file. ex:megaman"/>
     <arg name="param_db_file_name" default="apriltagsDB" doc="Specify a param file. ex:megaman"/>
     <!--<arg name="config" default="baseline" doc="Specify a config."/>-->
     <!--<arg name="param_file_name" default="$(env ROBOT_TYPE)" doc="Specify a param file. ex: duckiebot."/>-->
@@ -18,6 +18,7 @@
         <node name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen">
             <param name="config" value="$(find planning)/config/$(arg node_name)/$(arg param_file_name).yaml"/>
             <param name="markers_db" value="$(find planning)/config/$(arg node_name)/$(arg param_db_file_name).yaml"/>
+            <remap from="planning_node/tags_id" to="apriltag_detector_node/tags_id" />
         </node>
 </group>
 </launch>
