@@ -12,7 +12,6 @@ from numpy import ndarray
 import yaml
 import pprint
 
-
 MOVEMENT = {
     0: 'left',
     1: 'straight',
@@ -20,9 +19,9 @@ MOVEMENT = {
 }
 
 SIGN = {
-    'left-T-intersect': [0, 1], #?
-    'right-T-intersect': [1, 2], #-
-    'T-intersection': [0, 2] #+
+    'left-T-intersect': [0, 1],  # ?
+    'right-T-intersect': [1, 2],  # -
+    'T-intersection': [0, 2]  # +
 }
 
 
@@ -88,7 +87,6 @@ class Planning(DTROS):
         marker = self.state[cross]['prev'][self.prev_state]
         rotation = self.map[self.trajectory[0]][marker][self.trajectory[1]]
         self.log(f'trajectory == {rotation}')
-
 
 
 if __name__ == "__main__":

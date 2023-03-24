@@ -1,7 +1,7 @@
 <launch>
     <arg name="veh" doc="Name of vehicle. ex: megaman"/>
-    <arg name="pkg_name" value="trajectory"/>
-    <arg name="node_name" default="trajectory_node"/>
+    <arg name="pkg_name" value="planning_trajectory"/>
+    <arg name="node_name" default="planning_trajectory_node"/>
     <!--<arg name="config" default="baseline" doc="Specify a config."/>-->
     <!--<arg name="param_file_name" default="$(env ROBOT_TYPE)" doc="Specify a param file. ex: duckiebot."/>-->
 
@@ -14,7 +14,11 @@
     <!-- "tag_detections/image/compressed": sensor_msgs/CompressedImage. Image with detections superimposed in JPEG format. -->
     <group ns="$(arg veh)">
         <node name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen">
-            <remap from="trajectory_node/odom" to="deadreckoning_node/odom" />
+            <remap from="planning_trajectory_node/state_pos" to="trajectory_node/state_pos" />
+            <remap from="planning_trajectory_node/state" to="trajectory_node/state_vector" />
+            <remap from="planning_trajectory_node/dist_by_goal" to="trajectory_node/dist" />
+            <!--<remap from="planning_trajectory_node/turn_type" to="???????????????" /> -->
+
         </node>
     </group>
 </launch>
