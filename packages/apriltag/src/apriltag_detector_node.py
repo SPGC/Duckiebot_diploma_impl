@@ -48,7 +48,6 @@ class AprilTagDetector(DTROS):
         self.start_detect = False
 
     def change_stop_val(self, msg):
-        self.log('apriltag stop'*10)
         self.start_detect = True
 
     def _findAprilTags(self, image):
