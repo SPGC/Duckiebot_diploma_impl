@@ -27,14 +27,14 @@ class PIDController(DTROS):
             "~error", Float64, self.cb_err, queue_size=1, buff_size="10MB"
         )
 
-        self.log('trajectory_node_init')
-
         self._wheel_pub = rospy.Publisher(
             "~car_cmd", Twist2DStamped, queue_size=1
         )
         self.integral = 0
         self.derivative = 0
         self.prev_error = 0
+
+        self.log('pid_controller_node_init')
 
     def cb_err(self, msg: Float64):
         error = msg.data  # NO CHECKED
