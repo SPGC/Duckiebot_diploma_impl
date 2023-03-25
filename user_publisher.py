@@ -23,7 +23,18 @@ if __name__ == '__main__':
     client = roslibpy.Ros(host=args.ip, port=9001)
     client.run()
     bot = args.bot_name
-    map_name = args.district  # 'zone1' 'zone2' 'zone3' 'full'
+    trajectory = args.trajectory[1:len(args.trajectory)-1]
+    trajectory = list(map(int, trajectory.split(',')))
+
+    if args.district == '0':
+        map_name = 'zone1'
+    elif args.district == '1':
+        map_name = 'zone2'
+    elif args.district == '2':
+        map_name = 'zone3'
+    else:
+        map_name = args.district
+     # 'zone1' 'zone2' 'zone3' 'full'
 
 
     axes= [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -37,8 +48,8 @@ if __name__ == '__main__':
     joy_pub = roslibpy.Topic(client, f'/{bot}/joy', 'sensor_msgs/Joy')
 
     map_publisher.publish(roslibpy.Message({'data': map_name}))
-    begin_state_publisher.publish(roslibpy.Message({'data': args.start}))
-    trajectory_publisher.publish(roslibpy.Message({'data': args.trajectory}))
+    begin_state_publisher.publish(roslibpy.Message({'data': int(args.start)}))
+    trajectory_publisher.publish(roslibpy.Message({'data': trajectory}))
     start_pub.publish(roslibpy.Message({'data': True}))
     joy_pub.publish(roslibpy.Message({'axes': axes, 'buttons':buttons }))
     time.sleep(1)
