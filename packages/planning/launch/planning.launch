@@ -2,7 +2,11 @@
     <arg name="veh" doc="Name of vehicle. ex: megaman"/>
     <arg name="pkg_name" value="planning"/>
     <arg name="node_name" default="planning_node"/>
-    <arg name="param_file_name" default="autolab_test" doc="Specify a param file. ex:megaman"/>
+    <arg name="zone1" default="zone1_map" doc="Specify a param file. ex:megaman"/>
+    <arg name="zone2" default="zone2_map" doc="Specify a param file. ex:megaman"/>
+    <arg name="zone3" default="zone3_map" doc="Specify a param file. ex:megaman"/>
+    <arg name="full" default="full_map" doc="Specify a param file. ex:megaman"/>
+    <arg name="autolab" default="autolab_test" doc="Specify a param file. ex:megaman"/>
     <arg name="param_db_file_name" default="apriltagsDB" doc="Specify a param file. ex:megaman"/>
     <!--<arg name="config" default="baseline" doc="Specify a config."/>-->
     <!--<arg name="param_file_name" default="$(env ROBOT_TYPE)" doc="Specify a param file. ex: duckiebot."/>-->
@@ -16,7 +20,11 @@
     <!-- "tag_detections/image/compressed": sensor_msgs/CompressedImage. Image with detections superimposed in JPEG format. -->
 <group ns="$(arg veh)">
         <node name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen">
-            <param name="config" value="$(find planning)/config/$(arg node_name)/$(arg param_file_name).yaml"/>
+            <param name="zone1" value="$(find planning)/config/$(arg node_name)/$(arg zone1).yaml"/>
+            <param name="zone2" value="$(find planning)/config/$(arg node_name)/$(arg zone2).yaml"/>
+            <param name="zone3" value="$(find planning)/config/$(arg node_name)/$(arg zone3).yaml"/>
+            <param name="full" value="$(find planning)/config/$(arg node_name)/$(arg full).yaml"/>
+            <param name="autolab" value="$(find planning)/config/$(arg node_name)/$(arg autolab).yaml"/>
             <param name="markers_db" value="$(find planning)/config/$(arg node_name)/$(arg param_db_file_name).yaml"/>
             <remap from="planning_node/tags_id" to="apriltag_detector_node/tags_id" />
         </node>
