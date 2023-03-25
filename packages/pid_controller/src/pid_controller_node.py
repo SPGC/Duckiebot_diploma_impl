@@ -8,7 +8,7 @@ from numpy.linalg import norm
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 from duckietown_msgs.msg import Twist2DStamped
 from std_msgs.msg import Float64, Int32
-from nav_msgs.msg import Odometry, Twist
+from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Vector3
 from numpy import ndarray
 

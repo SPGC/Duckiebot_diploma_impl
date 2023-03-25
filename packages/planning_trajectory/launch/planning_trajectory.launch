@@ -17,7 +17,6 @@
             <remap from="planning_trajectory_node/state_pos" to="trajectory_node/state_pos" />
             <remap from="planning_trajectory_node/state" to="trajectory_node/state_vector" />
             <remap from="planning_trajectory_node/dist_by_goal" to="trajectory_node/dist" />
-            <!--<remap from="planning_trajectory_node/turn_type" to="???????????????" /> -->
 
         </node>
     </group>

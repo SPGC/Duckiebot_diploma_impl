@@ -61,11 +61,11 @@ class Trajectory(DTROS):
             self.current_point = Point()
             self.update_current_point(data_pos)
             return
-        self.log(f"{self.is_moving(data_pos)} :: {data_pos.x} :: {self.current_point.x}")
+        #self.log(f"{self.is_moving(data_pos)} :: {data_pos.x} :: {self.current_point.x}")
         if self.is_moving(data_pos):
             self.update_state(data_pos)
             self.update_current_point(data_pos)
-            self.update_goal_state_vector()
+        self.update_goal_state_vector()
         self._pos_pub.publish(self.current_point)
 
     def cb_update_goal(self, goal: Point):
@@ -80,7 +80,6 @@ class Trajectory(DTROS):
         self.state.x = new_point.x - self.current_point.x
         self.state.y = new_point.y - self.current_point.y
         self.state.z = new_point.z - self.current_point.z
-        self.log(self.state)
         self._state_pub.publish(self.state)
 
     def update_goal_state_vector(self):
@@ -91,7 +90,7 @@ class Trajectory(DTROS):
 
     def update_error_and_dist(self):
         self._odm_error_pub.publish(self.error())
-        self._dist_goal.publish(self.dist())
+        #self._dist_goal.publish(self.dist())
 
     # not checked
     def error(self):
