@@ -12,7 +12,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Vector3
 from numpy import ndarray
 
-P, I, D = .1, 0, 0
+P, I, D = 1, 0, 0
 
 DEFAULT_LINEAR_SPEED = 0.5
 
@@ -22,7 +22,9 @@ class PIDController(DTROS):
         super(PIDController, self).__init__(
             node_name="pid_controller_node", node_type=NodeType.PERCEPTION
         )
-
+        self.base_line = 0.1
+        self.r = 0.0318
+        self.limit = 1
         self._goal_sub = rospy.Subscriber(
             "~error", Float64, self.cb_err, queue_size=1, buff_size="10MB"
         )
@@ -43,9 +45,16 @@ class PIDController(DTROS):
         self.prev_error = error
 
         # отправка сообщения
-        msg = Twist2DStamped()
-        msg.v = DEFAULT_LINEAR_SPEED
-        msg.omega = P * error + I * self.integral + D * self.derivative
+
+
+        v = DEFAULT_LINEAR_SPEED
+        omega = P * error + I * self.integral + D * self.derivative
+        msg = Twist2DStamped(v=v, omega=omega)
+        #v1 = ((v + 0.5 * omega * self.base_line) / self.r) / 22
+        #v2 = ((v - 0.5 * omega * self.base_line) / self.r) / 22
+        #u_r_limited = max(min(v1, self.limit), -self.limit)
+        #u_l_limited = max(min(v2, self.limit), -self.limit)
+        self.log(msg)
         self._wheel_pub.publish(msg)
 
 
