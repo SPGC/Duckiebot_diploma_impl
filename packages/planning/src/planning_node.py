@@ -12,7 +12,6 @@ from numpy import ndarray
 import yaml
 import pprint
 
-
 MOVEMENT = {
     0: 'left',
     1: 'straight',
@@ -20,13 +19,13 @@ MOVEMENT = {
 }
 
 SIGN = {
-    'left-T-intersect': [0, 1], #?
-    'right-T-intersect': [1, 2], #-
-    'T-intersection': [0, 2] #+
+    'left-T-intersect': [0, 1],  # ?
+    'right-T-intersect': [1, 2],  # -
+    'T-intersection': [0, 2]  # +
 }
 
 
-def parse(map, db, checker = False):
+def parse(map, db, checker=False):
     new_map = {}
     for cross_num in map.keys():
         new_map[cross_num] = {}
@@ -51,7 +50,6 @@ def parse(map, db, checker = False):
             if tag_id == '' or map[cross_num]['cross'][(3 + i) % 4] == '':
                 continue
             state[cross_num]['prev'][map[cross_num]['cross'][(3 + i) % 4]] = tag_id
-
 
     return new_map, markers_db, state
 
@@ -100,12 +98,9 @@ class Planning(DTROS):
             "~end_trajectory", Bool, self.update_trajectory_after_cross, queue_size=1, buff_size="20MB"
         )
 
-
         self.stop_tag_detection_pub = rospy.Publisher(
             '~stop_detection', Bool, queue_size=1
         )
-
-
 
     def update_trajectory_after_cross(self, msg):
         self.log('update vals')
@@ -152,7 +147,6 @@ class Planning(DTROS):
         self.update_state()
         self.log('map ready to run')
 
-
     def get_way(self, msg):
         self.log('in get_way planning method')
         if self.state is None or self.map is None or self.prev_state is None:
@@ -171,9 +165,10 @@ class Planning(DTROS):
             else:
                 self.log(f'state = {self.state}, prev == {self.prev_state}, cross == {cross}')
                 marker = self.state[cross]['prev'][self.prev_state]
-                rotation = self.map[self.trajectory[0] if self.trajectory[0] != 100 and self.trajectory[0] != 1000 else int(str(self.trajectory[0])[0])][marker][self.trajectory[1]]
+                rotation = self.map[self.trajectory[0] if self.trajectory[0] != 100 and self.trajectory[0] != 1000 and
+                                                          self.trajectory[0] != 20 and self.trajectory[0] != 200 else
+                int(str(self.trajectory[0])[0])][marker][self.trajectory[1]]
                 self.log(f'trajectory == {rotation}')
-
 
 
 if __name__ == "__main__":
