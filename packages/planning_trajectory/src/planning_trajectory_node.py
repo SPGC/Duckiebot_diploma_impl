@@ -12,6 +12,35 @@ from std_msgs.msg import Float64, Int32MultiArray, Int16, Int8
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Vector3
 from numpy import ndarray
+from scipy import interpolate
+
+TILE_SIZE = 0.616
+
+KIND = "kind"
+POINTS = "points"
+FREQUENCY = "freq"
+
+PATH_SETTINGS = {
+    FREQUENCY: 4,
+    0: {  # left
+        KIND: 2,
+        POINTS: [(3 / 4, 0.0), (1 / 2, 1 / 2), (0, 3 / 4)]
+    },
+    1: {  # straight
+        KIND: 1,
+        POINTS: [(3 / 4, 0.0), (3 / 4, 1)]
+    },
+    2: {  # right
+        KIND: 2,
+        POINTS: [(3 / 4, 0.0), (7 / 8, 3 / 16), (1, 1 / 4)]
+    }
+}
+
+COLOURS = {
+    0: 'y',  # 'YELLOW',
+    1: 'c',  # 'BLUE',
+    2: 'g',  # 'GREEN'
+}
 
 
 class PlanningTrajectory(DTROS):
@@ -68,6 +97,21 @@ class PlanningTrajectory(DTROS):
         val = self.pos
         val.x += 0.2
         self._goal_pub.publish(val)
+
+    def get_path(self, turn_id):
+        if turn_id == 1: # straight
+            pass
+
+    def _get_interpolate_path(self, turn_id):  # 0 1 2
+        path_config = PATH_SETTINGS[turn_id]
+        kind = path_config[KIND]
+        points = path_config[POINTS]
+        x = np.array([TILE_SIZE * kx for kx, _ in points])
+        y = np.array([TILE_SIZE * ky for _, ky in points])
+        xp = np.linspace(x[0], x[-1], PATH_SETTINGS[FREQUENCY])
+        if turn_id == 1:
+            pass
+        return xp, interpolate.interp1d(x, y, kind=kind)
 
 
 if __name__ == "__main__":
