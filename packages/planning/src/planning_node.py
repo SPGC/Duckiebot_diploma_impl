@@ -100,6 +100,9 @@ class Planning(DTROS):
             "~tags_id", Int32MultiArray, self.get_way, queue_size=1, buff_size="20MB"
         )
 
+
+
+
     def update_state(self):
         map_conf = None
         if self.map_name == 'zone1':
