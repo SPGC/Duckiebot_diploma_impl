@@ -72,6 +72,7 @@ class Planning(DTROS):
         self.zone2 = rospy.get_param('~zone2')
         self.zone3 = rospy.get_param('~zone3')
         self.full = rospy.get_param('~full')
+        self.autolab = rospy.get_param('~autolab')
 
         with open(self.markers_conf) as stream:
             self.markers_db_yaml = yaml.safe_load(stream)
@@ -109,9 +110,11 @@ class Planning(DTROS):
             map_conf = self.zone3
         elif self.map_name == 'full':
             map_conf = self.full
+        elif self.map_name == 'autolab':
+            map_conf = self.autolab
         with open(map_conf) as stream:
             self.map = yaml.safe_load(stream)
-        self.state = self.map['state']
+        self.state = self.map
         self.map, self.markers_db, self.state = parse(self.map, self.markers_db_yaml)
         if self.map_name == 'zone1' or self.map_name == 'full':
             self.state[1]['prev'][2] = 152
@@ -130,6 +133,8 @@ class Planning(DTROS):
     def update_map(self, msg):
         self.map_name = msg.data
         self.log(f'tmp_map init == {self.map_name}')
+        self.update_state()
+        self.log('map ready to run')
 
 
     def get_way(self, msg):
