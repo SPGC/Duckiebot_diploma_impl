@@ -74,8 +74,10 @@ class AprilTagDetector(DTROS):
             marker_id = [i.tag_id for i in markers]
             self.log(f'detected marker from apriltag {marker_id}')
             #self.log(marker_id)
-            marker_msg = Int32MultiArray(data=marker_id)
-            self.marker_id_pub.publish(marker_msg)
+            if len(marker_id) != 0:
+                marker_msg = Int32MultiArray(data=marker_id)
+                self.marker_id_pub.publish(marker_msg)
+                self.start_detect = False
 
 
 if __name__ == "__main__":

@@ -171,7 +171,7 @@ class Planning(DTROS):
             else:
                 self.log(f'state = {self.state}, prev == {self.prev_state}, cross == {cross}')
                 marker = self.state[cross]['prev'][self.prev_state]
-                rotation = self.map[self.trajectory[0]][marker][self.trajectory[1]]
+                rotation = self.map[self.trajectory[0] if self.trajectory[0] != 100 and self.trajectory[0] != 1000 else int(str(self.trajectory[0])[0])][marker][self.trajectory[1]]
                 self.log(f'trajectory == {rotation}')
 
 
