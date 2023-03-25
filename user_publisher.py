@@ -44,7 +44,7 @@ if __name__ == '__main__':
     map_publisher = roslibpy.Topic(client, f'/{bot}/planning_node/map_state', 'std_msgs/String')
     begin_state_publisher = roslibpy.Topic(client, f'/{bot}/planning_node/begin_state', 'std_msgs/Int32')
     trajectory_publisher = roslibpy.Topic(client, f'/{bot}/planning_node/trajectory', 'std_msgs/Int32MultiArray')
-    start_pub = roslibpy.Topic(client, f'/{bot}/lane_controller_node/start', 'std_msgs/Bool')
+    start_pub = roslibpy.Topic(client, f'/{bot}/trajectory/end_trajectory_sub', 'std_msgs/Bool')
     joy_pub = roslibpy.Topic(client, f'/{bot}/joy', 'sensor_msgs/Joy')
 
     map_publisher.publish(roslibpy.Message({'data': map_name}))

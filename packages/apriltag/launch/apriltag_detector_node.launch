@@ -17,6 +17,7 @@
             <remap from="apriltag_detector_node/start_detection" to="stop_line_filter_node/at_stop_line"/>
             <remap from="apriltag_detector_node/image" to="camera_node/image/compressed" />
             <remap from="apriltag_detector_node/stop_detection" to="planning_node/stop_detection"/>
+            <remap from="apriltag_detector_node/switcher" to="trajectory/end_trajectory_sub"/>
         </node>
 </group>
 </launch>

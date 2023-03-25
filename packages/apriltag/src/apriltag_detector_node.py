@@ -51,6 +51,7 @@ class AprilTagDetector(DTROS):
     def update_switcher(self, msg):
         self.switcher = True
 
+
     def change_start_val(self, msg):
         self.log("stop detection")
         self.start_detect = False
@@ -58,6 +59,7 @@ class AprilTagDetector(DTROS):
     def change_stop_val(self, msg):
         if self.switcher:
             self.start_detect = True
+            self.switcher = False
             
 
     def _findAprilTags(self, image):

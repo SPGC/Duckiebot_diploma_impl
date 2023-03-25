@@ -48,7 +48,7 @@ def parse(map, db, checker = False):
     for cross_num in map.keys():
         state[cross_num] = {'prev': {}}
         for i, tag_id in enumerate(map[cross_num]['tag_id']):
-            if tag_id == '' or map[cross_num]['cross'][3 - i] == '':
+            if tag_id == '' or map[cross_num]['cross'][(3 + i) % 4] == '':
                 continue
             state[cross_num]['prev'][map[cross_num]['cross'][(3 + i) % 4]] = tag_id
 
@@ -92,16 +92,29 @@ class Planning(DTROS):
             '~map_state', String, self.update_map, queue_size=1
         )
 
-        self.stop_tag_detection_pub = rospy.Publisher(
-            '~stop_detection', Bool, queue_size=1
-        )
-
         self.tag_sub = rospy.Subscriber(
             "~tags_id", Int32MultiArray, self.get_way, queue_size=1, buff_size="20MB"
         )
 
+        self.end_trajectory_sub = rospy.Subscriber(
+            "~end_trajectory", Bool, self.update_trajectory_after_cross, queue_size=1, buff_size="20MB"
+        )
 
 
+        self.stop_tag_detection_pub = rospy.Publisher(
+            '~stop_detection', Bool, queue_size=1
+        )
+
+
+
+    def update_trajectory_after_cross(self, msg):
+        self.log('update vals')
+        self.log(f'prev before, {self.prev_state}, traj == {self.trajectory}')
+        self.prev_state = self.trajectory[0]
+        del self.trajectory[0]
+        self.log(f'prev after, {self.prev_state}, traj == {self.trajectory}')
+        if len(self.trajectory) == 1:
+            self.log('next stop is destination')
 
     def update_state(self):
         map_conf = None
@@ -126,7 +139,7 @@ class Planning(DTROS):
         self.log(self.markers_db)
 
     def update_trajectory(self, msg):
-        self.trajectory = msg.data
+        self.trajectory = list(msg.data)
         self.log(f'traj init == {self.trajectory}')
 
     def update_begin_state(self, msg):
@@ -153,9 +166,13 @@ class Planning(DTROS):
             cross = list(set([self.markers_db[i] for i in data]))
             self.log(f'current cross {cross}')
             cross = cross[0]
-            marker = self.state[cross]['prev'][self.prev_state]
-            rotation = self.map[self.trajectory[0]][marker][self.trajectory[1]]
-            self.log(f'trajectory == {rotation}')
+            if cross == self.trajectory[0] and len(self.trajectory) == 1:
+                self.log('destination')
+            else:
+                self.log(f'state = {self.state}, prev == {self.prev_state}, cross == {cross}')
+                marker = self.state[cross]['prev'][self.prev_state]
+                rotation = self.map[self.trajectory[0]][marker][self.trajectory[1]]
+                self.log(f'trajectory == {rotation}')
 
 
 
