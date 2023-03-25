@@ -5,7 +5,7 @@ import rospy
 import numpy as np
 from numpy.linalg import norm
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
-from std_msgs.msg import Float64, Int32MultiArray, Bool, Int32, String
+from std_msgs.msg import Float64, Int32MultiArray, Bool, Int32, String, Int8
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Vector3
 from numpy import ndarray
@@ -102,6 +102,11 @@ class Planning(DTROS):
             '~stop_detection', Bool, queue_size=1
         )
 
+
+        self.rotation_pub = rospy.Publisher(
+            '~rotation', Int8, queue_size=1
+        )
+
     def update_trajectory_after_cross(self, msg):
         self.log('update vals')
         self.log(f'prev before, {self.prev_state}, traj == {self.trajectory}')
@@ -168,6 +173,7 @@ class Planning(DTROS):
                 rotation = self.map[self.trajectory[0] if self.trajectory[0] != 100 and self.trajectory[0] != 1000 and
                                                           self.trajectory[0] != 20 and self.trajectory[0] != 200 else
                 int(str(self.trajectory[0])[0])][marker][self.trajectory[1]]
+                self.rotation_pub.publish(Int8(data=rotation))
                 self.log(f'trajectory == {rotation}')
 
 
