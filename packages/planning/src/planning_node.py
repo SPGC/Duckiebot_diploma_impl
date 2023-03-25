@@ -176,7 +176,6 @@ class Planning(DTROS):
                 self.rotation_pub.publish(Int8(data=rotation))
                 self.log(f'trajectory == {rotation}')
 
-
 if __name__ == "__main__":
     node = Planning()
     # spin forever

@@ -35,11 +35,22 @@
 	<include file="$(find apriltag)/launch/apriltag_detector_node.launch">
             <arg name="veh" value="$(arg veh)"/>
 	</include>
-	<!--<include file="$(find trajectory)/launch/trajectory.launch">
+
+	<include file="$(find trajectory)/launch/trajectory.launch">
             <arg name="veh" value="$(arg veh)"/>
-	</include>-->
+	</include>
+
 	<include file="$(find planning)/launch/planning.launch">
             <arg name="veh" value="$(arg veh)"/>
 	</include>
+
+	<include file="$(find planning_trajectory)/launch/planning_trajectory.launch">
+            <arg name="veh" value="$(arg veh)"/>
+	</include>
+
+    <include file="$(find pid_controller)/launch/pid_controller.launch">
+            <arg name="veh" value="$(arg veh)"/>
+	</include>
+
 
 </launch>
