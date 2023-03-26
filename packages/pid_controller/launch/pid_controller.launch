@@ -15,7 +15,7 @@
     <group ns="$(arg veh)">
         <node name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen">
             <remap from="pid_controller_node/error" to="trajectory_node/error" />
-            <remap from="pid_controller_node/car_cmd" to="car_cmd_switch_node/cmd"/>
+            <remap from="pid_controller_node/car_cmd" to="wheels_driver_node/wheels_cmd"/>
         </node>
     </group>
 </launch>

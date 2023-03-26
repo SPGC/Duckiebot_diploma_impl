@@ -43,7 +43,7 @@ class Trajectory(DTROS):
 
         self.current_point = None
         self.state = Vector3(0, 0, 0)
-
+        self.is_active = False
         self.goal_point = Point()
         self.goal_state = Vector3(0, 0, 0)
 
@@ -61,15 +61,17 @@ class Trajectory(DTROS):
             self.current_point = Point()
             self.update_current_point(data_pos)
             return
-        #self.log(f"{self.is_moving(data_pos)} :: {data_pos.x} :: {self.current_point.x}")
+        # self.log(f"{self.is_moving(data_pos)} :: {data_pos.x} :: {self.current_point.x}")
         if self.is_moving(data_pos):
             self.update_state(data_pos)
             self.update_current_point(data_pos)
-        self.update_goal_state_vector()
+        if self.is_active:
+            self.update_goal_state_vector()
         self._pos_pub.publish(self.current_point)
 
     def cb_update_goal(self, goal: Point):
         self.goal_point = goal
+        self.is_active = True
 
     def update_current_point(self, new_point):
         self.current_point.x = new_point.x
@@ -89,21 +91,15 @@ class Trajectory(DTROS):
         self.update_error_and_dist()
 
     def update_error_and_dist(self):
-        self._odm_error_pub.publish(self.error())
-        #self._dist_goal.publish(self.dist())
+        self._odm_error_pub.publish(float(self.error()))
+        # self._dist_goal.publish(self.dist())
 
-    # not checked
     def error(self):
         v1 = np.array((self.state.x, self.state.y))
         v2 = np.array((self.goal_state.x, self.goal_state.y))
-        val = 1 - np.dot(v1, v2) / (norm(v1) * norm(v2))
+        sign = 1 if np.cross(v1, v2) > 0 else -1  # v1 -- cur; v2 -- goal vector
+        val = sign * np.dot(v1, v2) / (norm(v1) * norm(v2))
         return val
-
-    # not checked
-    def dist(self) -> float | ndarray:
-        v1 = np.array((self.goal_point.x, self.goal_point.y))
-        v2 = np.array((self.current_point.x, self.current_point.y))
-        return np.linalg.norm(v1 - v2)
 
     def is_moving(self, p: Point) -> Point:
         return self.current_point.x != p.x and self.current_point.y != p.y

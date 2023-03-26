@@ -11,11 +11,12 @@ from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 from std_msgs.msg import Float64, Int32MultiArray, Int16, Int8
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Vector3
+from visualization_msgs.msg import Marker
 from numpy import ndarray
 from scipy import interpolate
 
 TILE_SIZE = 0.616
-EPS = 0.001
+EPS = 0.03 # 3 cm
 KIND = "kind"
 POINTS = "points"
 FREQUENCY = "freq"
@@ -90,6 +91,8 @@ class PlanningTrajectory(DTROS):
             "~goal", Point, queue_size=1
         )
 
+        self.marker_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=1)
+
         # Данные из real
         self.real_pos = np.array([0, 0])  # current_point
         self.real_state = np.array([])  # вектор куда сейчас смотрит робот
@@ -163,8 +166,10 @@ class PlanningTrajectory(DTROS):
         if len(self.goal) == 2:
             v1 = np.array((self.goal[0], self.goal[1]))
             v2 = np.array((self.real_pos[0], self.real_pos[1]))
+            self.log(f"Distance to next point: {np.linalg.norm(v1 - v2)} :: v1:{v1} :: v2:{v2}")
             return np.linalg.norm(v1 - v2) < EPS
         return False
+
     def _get_next_step_vector(self, cosin, v1, v2):
         norm_orig = v1 / norm(v1)
         sin_alpha = np.sqrt(1 - cosin ** 2)
