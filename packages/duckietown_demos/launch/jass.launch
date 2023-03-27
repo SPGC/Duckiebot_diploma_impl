@@ -17,8 +17,6 @@
 		<!-- Camera and anti intagram -->
 		<arg name="anti_instagram" value="true" />
 
-		<!-- Deadreckoning (aka. Odometry)	-->
-
 		<!--<arg name="/lane_following/stop_line_filter" value="true"/> -->
 	    <!-- Lane Following stack -->
 	    <arg name="lane_following" value="true"/>
@@ -52,5 +50,9 @@
             <arg name="veh" value="$(arg veh)"/>
 	</include>
 
+		<!-- Deadreckoning (aka. Odometry)	-->
+	<include file="$(find deadreckoning)/launch/deadreckoning_node.launch">
+            <arg name="veh" value="$(arg veh)"/>
+    </include>
 
 </launch>
