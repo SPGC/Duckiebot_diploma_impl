@@ -8,7 +8,7 @@ from PIL import Image
 
 app = Flask(__name__)
 
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt', device='mps')
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt', device='mps' if torch.has_mps else 'cpu')
 
 @app.route('/detect_objects', methods=['POST'])
 def detect_objects():
