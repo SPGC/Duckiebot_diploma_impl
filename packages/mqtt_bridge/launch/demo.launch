@@ -1,0 +1,10 @@
+<launch>
+  <arg name="veh" doc="Name of vehicle. ex: megaman"/>
+  <arg name="use_tls" default="false" />
+  <group ns="$(arg veh)">
+    <node name="mqtt_bridge" pkg="mqtt_bridge" type="mqtt_bridge_node.py" output="screen">
+      <rosparam command="load" file="$(find mqtt_bridge)/config/demo_params.yaml" />
+      <rosparam if="$(arg use_tls)" command="load" ns="mqtt" file="$(find mqtt_bridge)/config/tls_params.yaml" />
+    </node>
+  </group>
+</launch>

@@ -59,4 +59,9 @@
 			<arg name="veh" value="$(arg veh)"/>
 	</include>
 
+	<!--Launch Ros Mqtt Bridge-->
+	<include file="$(find mqtt_bridge)/launch/demo.launch">
+            <arg name="veh" value="$(arg veh)"/>
+    </include>
+
 </launch>
