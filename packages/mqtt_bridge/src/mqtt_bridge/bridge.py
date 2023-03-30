@@ -4,6 +4,7 @@ from typing import Optional, Type, Dict, Union
 import inject
 import paho.mqtt.client as mqtt
 import rospy
+import os
 
 from .util import lookup_object, extract_values, populate_instance
 
@@ -44,6 +45,9 @@ class RosToMqttBridge(Bridge):
     def __init__(self, topic_from: str, topic_to: str, msg_type: rospy.Message, frequency: Optional[float] = None):
         self._topic_from = topic_from
         self._topic_to = self._extract_private_path(topic_to)
+
+        self.bot_name = os.environ["VEHICLE_NAME"]
+        self._topic_to = f"vehicle/{self.bot_name}/{self._topic_to}"
         self._last_published = rospy.get_time()
         self._interval = 0 if frequency is None else 1.0 / frequency
         rospy.loginfo(f'Connected to Ros Topic {topic_from}')
@@ -73,6 +77,8 @@ class MqttToRosBridge(Bridge):
         self._topic_to = topic_to
         self._msg_type = msg_type
         self._queue_size = queue_size
+        self.bot_name = os.environ["VEHICLE_NAME"]
+        self._topic_from = f"vehicle/{self.bot_name}/{self._topic_from}"
         self._last_published = rospy.get_time()
         self._interval = None if frequency is None else 1.0 / frequency
         # Adding the correct topic to subscribe to
