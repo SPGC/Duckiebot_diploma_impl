@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 
 import numpy as np
+from torch2trt import torch2trt
+from torchvision import transforms
+import torch
+import time
 import cv2
 import rospy
+import os
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage, Image
 from duckietown_msgs.msg import Segment, SegmentList, AntiInstagramThresholds
 from line_detector import LineDetector, ColorRange, plotSegments, plotMaps
+from model import MySegmentationNet
 from image_processing.anti_instagram import AntiInstagram
 
 from duckietown.dtros import DTROS, NodeType, TopicType
 
+AMOUNT_OF_ITERATIONS = 10
+HEIGHT = 120
+WIDTH = 320
 
 class LineDetectorNode(DTROS):
     """
@@ -52,6 +61,44 @@ class LineDetectorNode(DTROS):
     def __init__(self, node_name):
         # Initialize the DTROS parent class
         super(LineDetectorNode, self).__init__(node_name=node_name, node_type=NodeType.PERCEPTION)
+
+        # Model init block
+        self.repo_path = os.environ['DT_REPO_PATH']
+        torch_model = MySegmentationNet()
+        file_path = f'{self.repo_path}/packages/line_detector/config/model_weights.pth'
+        torch_model.load_state_dict(torch.load(file_path))
+        torch_model.eval()
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+        print("Device is", self.device)
+        torch_model.to(self.device)
+        torch_model.eval()
+
+        test = np.random.rand(1, 3, HEIGHT, WIDTH).astype(np.float32)
+        t_test = torch.from_numpy(test)
+        t_test.size()
+        t_test = t_test.to(self.device)
+        self.model = torch2trt(torch_model, [t_test])
+        self.resize = transforms.Resize((HEIGHT, WIDTH))
+        print(f"Starting model. Maximum amount of iterations is {AMOUNT_OF_ITERATIONS}")
+        iteration = 0
+        while iteration < AMOUNT_OF_ITERATIONS:
+            with torch.no_grad():
+                test = np.random.rand(1, 3, 120, 320).astype(np.float32)
+                t_test = torch.from_numpy(test)
+                t_test.size()
+                t_test = t_test.to(self.device)
+                start = time.time_ns()
+                result = self.model(t_test)
+                delta = (time.time_ns() - start) / 1000000
+                print(result[0, 0, 0, 0])
+                iteration += 1
+                print(f"Current iteration is {iteration}, current delta is {delta}")
+        del t_test
+        del result
+        print("Model init successful!")
 
         # Define parameters
         self._line_detector_parameters = rospy.get_param("~line_detector_parameters", None)
@@ -98,6 +145,10 @@ class LineDetectorNode(DTROS):
             "~debug/ranges_HV", Image, queue_size=1, dt_topic_type=TopicType.DEBUG
         )
 
+        self.pub_d_segmentation = rospy.Publisher(
+            "~debug/segmentation/compressed", CompressedImage, queue_size=1, dt_topic_type=TopicType.DEBUG
+        )
+
         # Subscribers
         self.sub_image = rospy.Subscriber(
             "~image/compressed", CompressedImage, self.image_cb, buff_size=10000000, queue_size=1
@@ -131,6 +182,7 @@ class LineDetectorNode(DTROS):
 
         """
 
+        start = time.time_ns()
         # Decode from compressed image with OpenCV
         try:
             image = self.bridge.compressed_imgmsg_to_cv2(image_msg)
@@ -138,18 +190,42 @@ class LineDetectorNode(DTROS):
             self.logerr(f"Could not decode image: {e}")
             return
 
-        # Perform color correction
-        if self.ai_thresholds_received:
-            image = self.ai.apply_color_balance(
-                self.anti_instagram_thresholds["lower"], self.anti_instagram_thresholds["higher"], image
-            )
+        # NN
+        img = image
+        with torch.no_grad():
+            x = torch.from_numpy(img[img.shape[0] // 2:, :, :].astype(np.float32)).permute(2, 0, 1)
+            x = self.resize(x)
+            x = torch.unsqueeze(x, 0)
+            print(x.size())
+            x = x.to(self.device) / 255
+            start_nn = time.time_ns()
+            result = self.model(x)
+            delta_nn = time.time_ns() - start_nn
+            result = result.to(torch.device("cpu"))
+            result = result[0]
+            print(result.size())
+            buf = torch.argmax(result, dim=0).to(torch.device("cpu")).numpy() * 100
+            delta_no_mem = time.time_ns() - start
+            print(np.unique(buf))
+        image = np.zeros((buf.shape[0], buf.shape[1], 3), dtype=np.uint8)
+        image[buf == 100] = [255, 255, 255]
+        image[buf == 200] = [255, 255, 0]
+        msg = self.bridge.cv2_to_compressed_imgmsg(image)
+        msg.header = image_msg.header
+        self.pub_d_segmentation.publish(msg)
 
-        # Resize the image to the desired dimensions
-        height_original, width_original = image.shape[0:2]
-        img_size = (self._img_size[1], self._img_size[0])
-        if img_size[0] != width_original or img_size[1] != height_original:
-            image = cv2.resize(image, img_size, interpolation=cv2.INTER_NEAREST)
-        image = image[self._top_cutoff :, :, :]
+        # # Perform color correction
+        # if self.ai_thresholds_received:
+        #     image = self.ai.apply_color_balance(
+        #         self.anti_instagram_thresholds["lower"], self.anti_instagram_thresholds["higher"], image
+        #     )
+        #
+        # # Resize the image to the desired dimensions
+        # height_original, width_original = image.shape[0:2]
+        # img_size = (self._img_size[1], self._img_size[0])
+        # if img_size[0] != width_original or img_size[1] != height_original:
+        #     image = cv2.resize(image, img_size, interpolation=cv2.INTER_NEAREST)
+        # image = image[self._top_cutoff:, :, :]
 
         # Extract the line segments for every color
         self.detector.setImage(image)
@@ -216,6 +292,10 @@ class LineDetectorNode(DTROS):
                 debug_image_msg = self.bridge.cv2_to_imgmsg(debug_img, encoding="bgr8")
                 debug_image_msg.header = image_msg.header
                 publisher.publish(debug_image_msg)
+
+        delta = time.time_ns() - start
+        print(
+            f"Image processed, full pipeline took {delta / 1000000} ms, nn took {delta_nn / 1000000} ms, nn with memory transfering {delta_no_mem / 1000000} ms")
 
     @staticmethod
     def _to_segment_msg(lines, normals, color):

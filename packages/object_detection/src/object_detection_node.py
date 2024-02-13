@@ -31,9 +31,9 @@ class ObjectDetectionNode(DTROS):
         # self._model = torch.hub.load('ultralytics/yolov5', 'custom', path = 'model.pt')
         # self._model.load_state_dict(torch.load('model.pt')['model'].state_dict())
 
-        self._img_sub = rospy.Subscriber(
-            "~image", CompressedImage, self.cb_image, queue_size=1, buff_size="20MB"
-        )
+        # self._img_sub = rospy.Subscriber(
+        #     "~image", CompressedImage, self.cb_image, queue_size=1, buff_size="20MB"
+        # )
 
         # self._detected_objs = rospy.Publisher(
         #     "~objects_detected", String, queue_size=1, dt_topic_type=TopicType.DRIVER

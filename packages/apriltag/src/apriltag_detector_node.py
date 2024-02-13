@@ -24,29 +24,29 @@ class AprilTagDetector(DTROS):
         super(AprilTagDetector, self).__init__(
             node_name="apriltag_detector_node", node_type=NodeType.PERCEPTION
         )
-        self.detector = apriltag.Detector(apriltag.DetectorOptions(families="tag36h11"))
-        self.start_detect = False
-        self.bridge = CvBridge()
-        self._img_sub = rospy.Subscriber(
-            "~image", CompressedImage, self.cb_image, queue_size=1, buff_size="20MB"
-        )
-        self.marker_id_pub = rospy.Publisher(
-            '~tags_id', Int32MultiArray, queue_size=1
-        )
-
-        self.stop_sub = rospy.Subscriber(
-            '~start_detection', BoolStamped, self.change_stop_val, queue_size=1
-        )
-
-        self.start_sub = rospy.Subscriber(
-            '~stop_detection', Bool, self.change_start_val, queue_size=1
-        )
-
-        self.switcher_sub = rospy.Subscriber(
-            '~switcher', Bool, self.update_switcher, queue_size=1
-        )
-        self.log('apriltag_init')
-        self.switcher = True
+        # self.detector = apriltag.Detector(apriltag.DetectorOptions(families="tag36h11"))
+        # self.start_detect = False
+        # self.bridge = CvBridge()
+        # self._img_sub = rospy.Subscriber(
+        #     "~image", CompressedImage, self.cb_image, queue_size=1, buff_size="20MB"
+        # )
+        # self.marker_id_pub = rospy.Publisher(
+        #     '~tags_id', Int32MultiArray, queue_size=1
+        # )
+        #
+        # self.stop_sub = rospy.Subscriber(
+        #     '~start_detection', BoolStamped, self.change_stop_val, queue_size=1
+        # )
+        #
+        # self.start_sub = rospy.Subscriber(
+        #     '~stop_detection', Bool, self.change_start_val, queue_size=1
+        # )
+        #
+        # self.switcher_sub = rospy.Subscriber(
+        #     '~switcher', Bool, self.update_switcher, queue_size=1
+        # )
+        # self.log('apriltag_init')
+        # self.switcher = True
 
     def update_switcher(self, msg):
         self.switcher = True
