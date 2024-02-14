@@ -15,7 +15,7 @@ from line_detector import LineDetector, ColorRange, plotSegments, plotMaps
 from model import MySegmentationNet
 from image_processing.anti_instagram import AntiInstagram
 
-from duckietown.dtros import DTROS, NodeType, TopicType
+from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 
 AMOUNT_OF_ITERATIONS = 10
 HEIGHT = 120
@@ -105,6 +105,8 @@ class LineDetectorNode(DTROS):
         self._colors = rospy.get_param("~colors", None)
         self._img_size = rospy.get_param("~img_size", None)
         self._top_cutoff = rospy.get_param("~top_cutoff", None)
+        self.params = dict()
+        self.params["~top_cutoff"] = DTParam("~top_cutoff", param_type=ParamType.INT, min_value=0, max_value=1000)
 
         self.bridge = CvBridge()
 
@@ -191,7 +193,7 @@ class LineDetectorNode(DTROS):
             return
 
         # NN
-        img = image
+        img = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         with torch.no_grad():
             x = torch.from_numpy(img[img.shape[0] // 2:, :, :].astype(np.float32)).permute(2, 0, 1)
             x = self.resize(x)
@@ -204,17 +206,17 @@ class LineDetectorNode(DTROS):
             result = result.to(torch.device("cpu"))
             result = result[0]
             print(result.size())
-            buf = torch.argmax(result, dim=0).to(torch.device("cpu")).numpy() * 100
+            buf = torch.argmax(result, dim=0).to(torch.device("cpu")).numpy()
             delta_no_mem = time.time_ns() - start
             print(np.unique(buf))
         image = np.zeros((buf.shape[0], buf.shape[1], 3), dtype=np.uint8)
-        image[buf == 100] = [255, 255, 255]
-        image[buf == 200] = [255, 255, 0]
+        image[buf == 1] = [255, 255, 255]
+        image[buf == 2] = [0, 255, 255]
         msg = self.bridge.cv2_to_compressed_imgmsg(image)
         msg.header = image_msg.header
         self.pub_d_segmentation.publish(msg)
 
-        # # Perform color correction
+        # Perform color correction
         # if self.ai_thresholds_received:
         #     image = self.ai.apply_color_balance(
         #         self.anti_instagram_thresholds["lower"], self.anti_instagram_thresholds["higher"], image
@@ -238,7 +240,7 @@ class LineDetectorNode(DTROS):
         segment_list.header.stamp = image_msg.header.stamp
 
         # Remove the offset in coordinates coming from the removing of the top part and
-        arr_cutoff = np.array([0, self._top_cutoff, 0, self._top_cutoff])
+        arr_cutoff = np.array([0, self.params["~top_cutoff"].value, 0, self.params["~top_cutoff"].value])
         arr_ratio = np.array(
             [
                 1.0 / self._img_size[1],
