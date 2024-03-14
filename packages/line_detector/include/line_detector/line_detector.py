@@ -57,7 +57,7 @@ class LineDetector(LineDetectorInterface):
 
         # initialize the variables that will hold the processed images
         self.bgr = np.empty(0)  #: Holds the ``BGR`` representation of an image
-        self.hsv = np.empty(0)  #: Holds the ``HSV`` representation of an image
+        # self.hsv = np.empty(0)  #: Holds the ``HSV`` representation of an image
         self.canny_edges = np.empty(0)  #: Holds the Canny edges of an image
 
     def setImage(self, image):
@@ -74,7 +74,7 @@ class LineDetector(LineDetectorInterface):
         """
 
         self.bgr = np.copy(image)
-        self.hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # self.hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         self.canny_edges = self.findEdges()
 
     def getImage(self):
@@ -131,7 +131,7 @@ class LineDetector(LineDetectorInterface):
 
         return lines
 
-    def colorFilter(self, color_range):
+    def colorFilter(self, pixel_map):
         """
         Obtains the regions of the image that fall in the provided color range and the subset of the detected Canny
         edges which are in these regions. Applies a `dilation <https://homepages.inf.ed.ac.uk/rbf/HIPR2/dilate.htm>`_
@@ -147,7 +147,8 @@ class LineDetector(LineDetectorInterface):
             :obj:`numpy array`: binary image with the edges in the image that fall in the color range
         """
         # threshold colors in HSV space
-        map = color_range.inRange(self.hsv)
+        # map = color_range.inRange(self.hsv)
+        map = pixel_map
 
         # binary dilation: fills in gaps and makes the detected regions grow
         kernel = cv2.getStructuringElement(
@@ -200,7 +201,8 @@ class LineDetector(LineDetectorInterface):
 
         return centers, normals
 
-    def detectLines(self, color_range):
+    def detectLines(self, pixel_map):
+
         """
         Detects the line segments in the currently set image that occur in and the edges of the regions of the image
         that are within the provided colour ranges.
@@ -211,7 +213,7 @@ class LineDetector(LineDetectorInterface):
         Returns:
             :py:class:`Detections`: A :py:class:`Detections` object with the map of regions containing the desired colors, and the detected lines, together with their center points and normals,
         """
-        map, edge_color = self.colorFilter(color_range)
+        map, edge_color = self.colorFilter(pixel_map)
         lines = self.houghLine(edge_color)
         centers, normals = self.findNormal(map, lines)
         return Detections(lines=lines, normals=normals, map=map, centers=centers)

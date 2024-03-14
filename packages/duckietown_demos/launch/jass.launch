@@ -50,18 +50,4 @@
             <arg name="veh" value="$(arg veh)"/>
 	</include>
 
-		<!-- Deadreckoning (aka. Odometry)	-->
-	<!-- <include file="$(find deadreckoning)/launch/deadreckoning_node.launch">
-            <arg name="veh" value="$(arg veh)"/>
-    </include> -->
-
-	<include file="$(find object_detection)/launch/object_detection.launch">
-			<arg name="veh" value="$(arg veh)"/>
-	</include>
-
-	<!--Launch Ros Mqtt Bridge-->
-<!-- 	<include file="$(find mqtt_bridge)/launch/demo.launch"> -->
-<!--             <arg name="veh" value="$(arg veh)"/> -->
-<!--     </include> -->
-
 </launch>

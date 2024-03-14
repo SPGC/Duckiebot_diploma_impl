@@ -18,8 +18,9 @@ from image_processing.anti_instagram import AntiInstagram
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 
 AMOUNT_OF_ITERATIONS = 10
-HEIGHT = 120
+HEIGHT = 240
 WIDTH = 320
+
 
 class LineDetectorNode(DTROS):
     """
@@ -76,7 +77,7 @@ class LineDetectorNode(DTROS):
         torch_model.to(self.device)
         torch_model.eval()
 
-        test = np.random.rand(1, 3, HEIGHT, WIDTH).astype(np.float32)
+        test = np.random.rand(1, 3, HEIGHT // 2, WIDTH).astype(np.float32)
         t_test = torch.from_numpy(test)
         t_test.size()
         t_test = t_test.to(self.device)
@@ -195,18 +196,19 @@ class LineDetectorNode(DTROS):
         # NN
         img = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         with torch.no_grad():
-            x = torch.from_numpy(img[img.shape[0] // 2:, :, :].astype(np.float32)).permute(2, 0, 1)
+            x = torch.from_numpy(img).permute(2, 0, 1)
             x = self.resize(x)
+            x = x[:, x.size()[1] // 2:, :]
             x = torch.unsqueeze(x, 0)
             print(x.size())
             x = x.to(self.device) / 255
             start_nn = time.time_ns()
             result = self.model(x)
             delta_nn = time.time_ns() - start_nn
-            result = result.to(torch.device("cpu"))
+            # result = result.to(torch.device("cpu"))
             result = result[0]
             print(result.size())
-            buf = torch.argmax(result, dim=0).to(torch.device("cpu")).numpy()
+            buf = torch.argmax(result, dim=0).to(torch.uint8).to(torch.device("cpu")).numpy()
             delta_no_mem = time.time_ns() - start
             print(np.unique(buf))
         image = np.zeros((buf.shape[0], buf.shape[1], 3), dtype=np.uint8)
@@ -216,24 +218,14 @@ class LineDetectorNode(DTROS):
         msg.header = image_msg.header
         self.pub_d_segmentation.publish(msg)
 
-        # Perform color correction
-        # if self.ai_thresholds_received:
-        #     image = self.ai.apply_color_balance(
-        #         self.anti_instagram_thresholds["lower"], self.anti_instagram_thresholds["higher"], image
-        #     )
-        #
-        # # Resize the image to the desired dimensions
-        # height_original, width_original = image.shape[0:2]
-        # img_size = (self._img_size[1], self._img_size[0])
-        # if img_size[0] != width_original or img_size[1] != height_original:
-        #     image = cv2.resize(image, img_size, interpolation=cv2.INTER_NEAREST)
-        # image = image[self._top_cutoff:, :, :]
-
         # Extract the line segments for every color
         self.detector.setImage(image)
+
         detections = {
-            color: self.detector.detectLines(ranges) for color, ranges in list(self.color_ranges.items())
+            "YELLOW": self.detector.detectLines((buf == 2).astype(np.uint8)),
+            "WHITE": self.detector.detectLines((buf == 1).astype(np.uint8))
         }
+
 
         # Construct a SegmentList
         segment_list = SegmentList()
