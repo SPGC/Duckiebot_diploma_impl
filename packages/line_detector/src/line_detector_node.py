@@ -81,6 +81,8 @@ class LineDetectorNode(DTROS):
         t_test = torch.from_numpy(test)
         t_test.size()
         t_test = t_test.to(self.device)
+        self.debug = DTParam("~debug", param_type=ParamType.BOOL)
+        self.isFirst = True
         self.model = torch2trt(torch_model, [t_test])
         self.resize = transforms.Resize((HEIGHT, WIDTH))
         print(f"Starting model. Maximum amount of iterations is {AMOUNT_OF_ITERATIONS}")
@@ -288,8 +290,12 @@ class LineDetectorNode(DTROS):
                 publisher.publish(debug_image_msg)
 
         delta = time.time_ns() - start
-        print(
-            f"Image processed, full pipeline took {delta / 1000000} ms, nn took {delta_nn / 1000000} ms, nn with memory transfering {delta_no_mem / 1000000} ms")
+        if self.debug.value:
+            print(
+                f"Image processed, full pipeline took {delta / 1000000} ms, nn took {delta_nn / 1000000} ms, nn with memory transfering {delta_no_mem / 1000000} ms")
+        if self.isFirst:
+            print("Node init successful")
+            self.isFirst = False
 
     @staticmethod
     def _to_segment_msg(lines, normals, color):
